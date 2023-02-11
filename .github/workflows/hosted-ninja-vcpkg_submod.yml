@@ -1,0 +1,110 @@
+name: c++ application
+
+on:
+  push:
+    branches: ["main"]
+    tags:
+      - v[0-9]+.[0-9]+
+      - v[0-9]+.[0-9]+.[0-9]+
+      - v[0-9]+.[0-9]+.[0-9]+.[0-9]+
+
+jobs:
+  job:
+    name: ${{ matrix.os }}-${{ github.workflow }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+        #cmake安装
+      - uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: 3.24.3
+
+        #vcpkg下载所需包
+      - name: Restore artifacts, or setup vcpkg for building artifacts
+        uses: lukka/run-vcpkg@v10
+        id: runvcpkg
+        with:
+          # This one is not needed, as it is the default value anyway.
+          # vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgJsonGlob: "**/cmakepresets/vcpkg.json"
+
+        #cmake编译
+
+      - name: Run CMake+vcpkg+Ninja
+        uses: lukka/run-cmake@v10
+        id: runcmake
+        with:
+          cmakeListsTxtPath: "${{ github.workspace }}/cmakepresets/CMakeLists.txt"
+          configurePreset: "ninja-multi-vcpkg"
+          buildPreset: "ninja-multi-vcpkg"
+
+      #测试
+      - name: test-${{ matrix.os }}-exe
+        if: matrix.os == 'windows-latest'
+        run: |
+          ${{ github.workspace }}/cmakepresets/builds/ninja-multi-vcpkg/Debug/main.exe
+          ${{ github.workspace }}/cmakepresets/builds/ninja-multi-vcpkg/Debug/test_main.exe
+
+      - name: test-${{ matrix.os }}-exe
+        if: matrix.os != 'windows-latest'
+        run: |
+          ${{ github.workspace }}/cmakepresets/builds/ninja-multi-vcpkg/Debug/main
+          ${{ github.workspace }}/cmakepresets/builds/ninja-multi-vcpkg/Debug/test_main   
+          tar -zcvPf  ${{ matrix.os }}.tar ${{ github.workspace }}/cmakepresets/builds/ninja-multi-vcpkg/Debug/*
+          ls ${{ github.workspace }}
+
+      #添加windows下vc库依赖
+      - name: add  windows vcdll
+        if: matrix.os == 'windows-latest'
+        run: |
+          copy C:/Windows/system32/msvcp140*  ./cmakepresets/builds/ninja-multi-vcpkg/Debug
+          copy C:/Windows/system32/vcruntime140*  ./cmakepresets/builds/ninja-multi-vcpkg/Debug
+          copy C:/Windows/system32/ucrtbase*  ./cmakepresets/builds/ninja-multi-vcpkg/Debug
+
+      - name: 7z
+        if: matrix.os == 'windows-latest'
+        uses: DuckSoft/create-7z-action@v1.0
+        with:
+          pathSource: ./cmakepresets/builds/ninja-multi-vcpkg/Debug/*
+          pathTarget: ${{ matrix.os }}.zip
+
+      #上传打包文件
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-${{ matrix.os }}
+          path: ${{ matrix.os }}.*
+
+      - name: download-artifact
+        if: github.ref_type=='tag'
+        uses: actions/download-artifact@v3
+        with:
+          path: ./artifact/
+
+      - name: note
+        if: github.ref_type=='tag'
+        shell: python
+        run: |
+          import os;f=open('releasenotes.md',"r");obj={i[0].strip():i[1:] for i in [i.split('-') for i in f.read().split('##')[1:]]};f.close()
+          note=[obj[i] for i in obj if i=='${{github.ref_name}}'];note=[note[0] if note else ''][0]
+          os.system("echo 'NOTE<<EOF' >> $GITHUB_ENV")
+          tmp=[os.system("echo '{}' >> $GITHUB_ENV".format(n.strip())) for n in note ]
+          os.system("echo 'EOF' >> $GITHUB_ENV")
+
+      - name: Create Release
+        if: github.ref_type=='tag'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{github.ref_name}}
+          name: ${{github.ref_name}}
+          body: ${{env.NOTE}}
+          prerelease: false
+          draft: false
+          files: ./artifact/test-${{ matrix.os }}/*
