@@ -4,7 +4,7 @@ project(test)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} /std:c++17")
 set(nlohmann-json_IMPLICIT_CONVERSIONS OFF)
-
+include (CTest)
 find_package(Protobuf REQUIRED)
 
 if(PROTOBUF_FOUND)
