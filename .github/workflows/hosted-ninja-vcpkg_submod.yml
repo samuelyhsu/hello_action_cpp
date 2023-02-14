@@ -2,11 +2,11 @@ name: c++ application
 
 on:
   push:
-    branches: ["main"]
-    tags:
-      - v[0-9]+.[0-9]+
-      - v[0-9]+.[0-9]+.[0-9]+
-      - v[0-9]+.[0-9]+.[0-9]+.[0-9]+
+   branches: ["main"]
+   tags: 
+     - v[0-9]+.[0-9]+
+     - v[0-9]+.[0-9]+.[0-9]+
+     - v[0-9]+.[0-9]+.[0-9]+.[0-9]+
 
 jobs:
   job:
@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [windows-latest,ubuntu-latest,macos-latest]
 
     steps:
       - uses: actions/checkout@v3
@@ -25,7 +25,7 @@ jobs:
       - uses: lukka/get-cmake@latest
         with:
           cmakeVersion: 3.24.3
-
+          
         #vcpkg下载所需包
       - name: Restore artifacts, or setup vcpkg for building artifacts
         uses: lukka/run-vcpkg@v10
@@ -33,47 +33,46 @@ jobs:
         with:
           # This one is not needed, as it is the default value anyway.
           # vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgJsonGlob: "**/vcpkg.json"
+          vcpkgJsonGlob: 'vcpkg.json'
 
+        
         #cmake编译
 
       - name: Run CMake+vcpkg+Ninja
         uses: lukka/run-cmake@v10
         id: runcmake
         with:
-          cmakeListsTxtPath: "${{ github.workspace }}/CMakeLists.txt"
-          configurePreset: "ninja-multi-vcpkg"
-          buildPreset: "ninja-multi-vcpkg"
-
-      #测试
-      - name: test-${{ matrix.os }}-exe
+          cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
+          configurePreset: 'ninja-multi-vcpkg'
+          buildPreset: 'ninja-multi-vcpkg'
+          buildPresetAdditionalArgs: '[`--config Release`]'
+          testPreset: 'ninja-multi-vcpkg'
+          testPresetAdditionalArgs: '[`--config Release`]'
+  
+      #测试          
+      - name: CTest
         if: matrix.os == 'windows-latest'
         run: |
-          ${{ github.workspace }}/builds/ninja-multi-vcpkg/Debug/main.exe
-          ${{ github.workspace }}/builds/ninja-multi-vcpkg/Debug/test_main.exe
-
-      - name: test-${{ matrix.os }}-exe
-        if: matrix.os != 'windows-latest'
-        run: |
-          ${{ github.workspace }}/builds/ninja-multi-vcpkg/Debug/main
-          ${{ github.workspace }}/builds/ninja-multi-vcpkg/Debug/test_main   
-          tar -zcvPf  ${{ matrix.os }}.tar ${{ github.workspace }}/builds/ninja-multi-vcpkg/Debug/*
-          ls ${{ github.workspace }}
-
+          cd ${{ github.workspace }}/builds/ninja-multi-vcpkg
+          ctest -T test --output-on-failure
+          
+      - name:  tar linux&macos
+        run: tar -zcvPf ${{ matrix.os }}.tar ${{ github.workspace }}/builds/ninja-multi-vcpkg/Release/*
+          
       #添加windows下vc库依赖
-      - name: add  windows vcdll
+      - name: add  windows vcdll 
         if: matrix.os == 'windows-latest'
-        run: |
-          copy C:/Windows/system32/msvcp140*  ./builds/ninja-multi-vcpkg/Debug
-          copy C:/Windows/system32/vcruntime140*  ./builds/ninja-multi-vcpkg/Debug
-          copy C:/Windows/system32/ucrtbase*  ./builds/ninja-multi-vcpkg/Debug
+        run : |
+          copy C:/Windows/system32/msvcp140*  ./builds/ninja-multi-vcpkg/Release
+          copy C:/Windows/system32/vcruntime140*  ./builds/ninja-multi-vcpkg/Release
+          copy C:/Windows/system32/ucrtbase*  ./builds/ninja-multi-vcpkg/Release
 
-      - name: 7z
-        if: matrix.os == 'windows-latest'
-        uses: DuckSoft/create-7z-action@v1.0
+      - name: 7z windows
+        uses:  DuckSoft/create-7z-action@v1.0
         with:
-          pathSource: ./builds/ninja-multi-vcpkg/Debug/*
-          pathTarget: ${{ matrix.os }}.zip
+          pathSource: ./builds/ninja-multi-vcpkg/Release/*
+          pathTarget: ${{ matrix.os }}.zip     
+
 
       #上传打包文件
       - name: Upload Artifacts
@@ -81,25 +80,26 @@ jobs:
         with:
           name: test-${{ matrix.os }}
           path: ${{ matrix.os }}.*
-
-      - name: download-artifact
-        if: github.ref_type=='tag'
+          
+      - name: download-artifact   
+        if: github.ref_type=='tag' 
         uses: actions/download-artifact@v3
-        with:
+        with: 
           path: ./artifact/
-
+          
       - name: note
-        if: github.ref_type=='tag'
-        shell: python
+        if: github.ref_type=='tag' 
+        shell: python 
         run: |
           import os;f=open('releasenotes.md',"r");obj={i[0].strip():i[1:] for i in [i.split('-') for i in f.read().split('##')[1:]]};f.close()
           note=[obj[i] for i in obj if i=='${{github.ref_name}}'];note=[note[0] if note else ''][0]
           os.system("echo 'NOTE<<EOF' >> $GITHUB_ENV")
           tmp=[os.system("echo '{}' >> $GITHUB_ENV".format(n.strip())) for n in note ]
           os.system("echo 'EOF' >> $GITHUB_ENV")
-
+          
+          
       - name: Create Release
-        if: github.ref_type=='tag'
+        if: github.ref_type=='tag' 
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{github.ref_name}}
@@ -107,4 +107,4 @@ jobs:
           body: ${{env.NOTE}}
           prerelease: false
           draft: false
-          files: ./artifact/test-${{ matrix.os }}/*
+          files:  ./artifact/test-${{ matrix.os }}/*
