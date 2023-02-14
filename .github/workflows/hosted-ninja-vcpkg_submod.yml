@@ -51,7 +51,6 @@ jobs:
   
       #测试          
       - name: CTest
-        if: matrix.os == 'windows-latest'
         run: |
           cd ${{ github.workspace }}/builds/ninja-multi-vcpkg
           ctest -T test --output-on-failure
