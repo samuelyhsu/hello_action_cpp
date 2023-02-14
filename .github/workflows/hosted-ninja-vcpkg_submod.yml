@@ -55,8 +55,7 @@ jobs:
           cd ${{ github.workspace }}/builds/ninja-multi-vcpkg
           ctest -T test --output-on-failure
           
-      - name:  tar linux&macos
-        run: tar -zcvPf ${{ matrix.os }}.tar ${{ github.workspace }}/builds/ninja-multi-vcpkg/Release/*
+
           
       #添加windows下vc库依赖
       - name: add  windows vcdll 
@@ -66,10 +65,10 @@ jobs:
           copy C:/Windows/system32/vcruntime140*  ./builds/ninja-multi-vcpkg/Release
           copy C:/Windows/system32/ucrtbase*  ./builds/ninja-multi-vcpkg/Release
 
-      - name: 7z windows
+      - name: 7z zip
         uses:  DuckSoft/create-7z-action@v1.0
         with:
-          pathSource: ./builds/ninja-multi-vcpkg/Release/*
+          pathSource: ${{ github.workspace }}/builds/ninja-multi-vcpkg/Release/*
           pathTarget: ${{ matrix.os }}.zip     
 
 
