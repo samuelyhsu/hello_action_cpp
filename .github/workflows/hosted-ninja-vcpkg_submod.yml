@@ -39,9 +39,8 @@ jobs:
         #cmake编译
       - name: Run CMake+vcpkg
         run: |
-         mkdir build
+         cmake . -B build -DEXECUTABLE_OUTPUT_PATH=myexe
          cd build
-         cmake ..
          cmake --build . --config Release
   
       #测试          
