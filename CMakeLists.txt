@@ -1,18 +1,19 @@
 cmake_minimum_required(VERSION 3.23)
-set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
 project(test)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS"${CMAKE_CXX_FLAGS} /std:c++17")
 set(nlohmann-json_IMPLICIT_CONVERSIONS OFF)
 
-
-include (CTest)
+include(CTest)
 find_package(Protobuf REQUIRED)
+
 if(PROTOBUF_FOUND)
     message("protobuf found")
 else()
     message(FATAL_ERROR "Cannot find Protobuf")
 endif()
+
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS test.proto)
 message("PROTO_SRCS = ${PROTO_SRCS}")
 message("PROTO_HDRS = ${PROTO_HDRS}")
@@ -42,6 +43,7 @@ target_link_libraries(test_main PRIVATE nlohmann_json::nlohmann_json)
 find_package(asio CONFIG REQUIRED)
 target_link_libraries(main PRIVATE asio asio::asio)
 target_link_libraries(test_main PRIVATE asio asio::asio)
+
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
     find_package(PahoMqttCpp CONFIG REQUIRED)
     target_link_libraries(main PRIVATE PahoMqttCpp::paho-mqttpp3)
@@ -53,4 +55,4 @@ else()
 endif()
 
 enable_testing()
-add_test(test_main "${EXECUTABLE_OUTPUT_PATH}/test_main" )
+add_test(NAME test_main COMMAND test_main)
