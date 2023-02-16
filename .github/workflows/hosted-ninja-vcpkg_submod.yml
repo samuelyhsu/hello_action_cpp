@@ -46,7 +46,7 @@ jobs:
       - name: CTest
         run: |
           cd build
-          ctest --verbose -T test --output-on-failure
+          ctest --verbose -C Release -T test --output-on-failure
 
       #添加windows下vc库依赖
       - name: add  windows vcdll
