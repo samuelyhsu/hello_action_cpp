@@ -55,4 +55,4 @@ else()
 endif()
 
 enable_testing()
-add_test(test_main test_main)
+add_test(NAME test_main COMMAND test_main)
