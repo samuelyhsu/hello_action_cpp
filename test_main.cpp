@@ -58,4 +58,3 @@ TEST_CASE("vectors can be sized and resized", "[vector]")
   REQUIRE(f_proto(4) == 4);
   REQUIRE(f_eigen() == 0);
 }
-int main(int argc, char *argv[]) { return Catch::Session().run(argc, argv); }
