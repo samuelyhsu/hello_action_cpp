@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-12]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v3
@@ -25,10 +25,11 @@ jobs:
       - uses: lukka/get-cmake@latest
         with:
           cmakeVersion: 3.24.3
+          useLocalCache: false     
+          useCloudCache: false 
+          ninjaVersion:  1.11.1
 
 
-      - name: get-ninja
-        uses: seanmiddleditch/gha-setup-ninja@master
         
         #vcpkg下载所需包
       - name: run-vcpkg
