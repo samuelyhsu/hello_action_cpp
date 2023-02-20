@@ -26,6 +26,10 @@ jobs:
         with:
           cmakeVersion: 3.24.3
 
+
+      - name: get-ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+        
         #vcpkg下载所需包
       - name: run-vcpkg
         uses: lukka/run-vcpkg@v10
