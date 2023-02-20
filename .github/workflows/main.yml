@@ -39,6 +39,7 @@ jobs:
           # This one is not needed, as it is the default value anyway.
           # vcpkgDirectory: '${{ github.workspace }}/vcpkg'
           vcpkgJsonGlob: "vcpkg.json"
+          doNotCache: true
 
         #cmake编译
       - name: Run CMake+vcpkg
