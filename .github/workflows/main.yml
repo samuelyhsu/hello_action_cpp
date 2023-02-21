@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [macos-latest]
+        os: [macos-12,ubuntu-22.04,windows-2022]
 
     steps:
       - uses: actions/checkout@v3
@@ -27,7 +27,6 @@ jobs:
           cmakeVersion: 3.24.3
           ninjaVersion:  1.11.1
 
-
         
         #vcpkg下载所需包
       - name: run-vcpkg
@@ -37,11 +36,15 @@ jobs:
           # This one is not needed, as it is the default value anyway.
           # vcpkgDirectory: '${{ github.workspace }}/vcpkg'
           vcpkgJsonGlob: "vcpkg.json"
+          
+          
+      - name: add pkg-config for macos
+        if: matrix.os == 'macos-12'
+        run:  brew install pkg-config
 
         #cmake编译
       - name: Run CMake+vcpkg
         run: |
-          brew install pkg-config
           cmake . -B build -DEXECUTABLE_OUTPUT_PATH=target -G Ninja
           cd build
           cmake --build . --config Release
@@ -54,7 +57,7 @@ jobs:
 
       #添加windows下vc库依赖
       - name: add  windows vcdll
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2022'
         run: |
           copy C:/Windows/system32/msvcp140*  ./build/target/Release
           copy C:/Windows/system32/vcruntime140*  ./build/target/Release
