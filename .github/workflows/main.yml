@@ -2,7 +2,7 @@ name: c++ application
 
 on:
   push:
-    branches: ["main", "test_action"]
+    branches: ["main", "test_action","test_vcpkg"]
     tags:
       - v[0-9]+.[0-9]+
       - v[0-9]+.[0-9]+.[0-9]+
