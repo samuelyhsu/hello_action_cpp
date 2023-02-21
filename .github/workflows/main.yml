@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [macos-10.15]
+        os: [macos-latest]
 
     steps:
       - uses: actions/checkout@v3
@@ -41,6 +41,7 @@ jobs:
         #cmake编译
       - name: Run CMake+vcpkg
         run: |
+          brew install pkg-config
           cmake . -B build -DEXECUTABLE_OUTPUT_PATH=target -G Ninja
           cd build
           cmake --build . --config Release
