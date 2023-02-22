@@ -1,6 +1,4 @@
 {
-  "name": "example",
-  "version-string": "latest",
   "dependencies": [
     "fmt",
     "catch2",
@@ -12,15 +10,15 @@
     "paho-mqttpp3",
     "asio"
   ],
-  "builtin-baseline": "253704407ae68efa37bf8f5b59b3e06dd40d3d3f",
+  "builtin-baseline": "703a8113f42e794534df5dfc5cece5dabcb949d0",
   "overrides": [
     {
       "name": "fmt",
-      "version": "9.1.0"
+      "version": "9.1.0#1"
     },
     {
       "name": "catch2",
-      "version": "3.1.1#2"
+      "version": "3.3.1"
     },
     {
       "name": "eigen3",
@@ -32,7 +30,7 @@
     },
     {
       "name": "protobuf",
-      "version": "3.21.8"
+      "version": "3.21.12"
     },
     {
       "name": "nlohmann-json",
@@ -44,11 +42,11 @@
     },
     {
       "name": "spdlog",
-      "version": "1.10.0#1"
+      "version": "1.11.0"
     },
     {
       "name": "asio",
-      "version": "1.24.0"
+      "version": "1.24.0#1"
     }
   ]
 }
